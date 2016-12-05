@@ -248,7 +248,6 @@ class Sudoku:
     def _remove_from_row_outside_box(self, row_found, box, number):
         for col in range(0, 9):
             if col not in box['cols'] and number in self.scratch[row_found][col]:
-                print "_remove_from_row_outside_box %s: %s, %s" % (number, row_found, col)
                 del self.scratch[row_found][col][number]
                 self._check_cell(row_found, col)
 
@@ -302,15 +301,9 @@ class Sudoku:
     #
     # Remove number from specific columns inside a box
     def _remove_from_col_inside_box(self, cols_found, box, number):
-        print ">>>>>>>>>> _remove_from_col_inside_box:"
-        print cols_found
-        print box
-        print number
         for col in cols_found:
             for row in box['rows']:
                 if len(self.scratch[row][col]) > 1 and number in self.scratch[row][col]:
-                    print self.scratch[row][col]
-                    print "Remove %s, from: %s, %s" % (number, row, col)
                     del self.scratch[row][col][number]
                     self._check_cell(row, col)
 
@@ -327,7 +320,6 @@ class Sudoku:
 
             for number in numbers_to_remove:
                 del self.scratch[row][col][number]
-                print "Removed %s from [%s, %s]" % (number, row, col)
 
     #
     # Find box pairs
@@ -419,6 +411,44 @@ class Sudoku:
             cell = self.cells_to_process.pop(0)
             self._process_cell(cell)
 
+    #
+    @staticmethod
+    def _has_nine(cells):
+        print cells
+        if len(cells) != 9:
+            print "length is %s" % len(cells)
+            return False
+
+        for num in range(1, 10):
+            if num in cells:
+                print "num %s not in " % num
+                print cells
+                return False
+
+        return True
+
+    # Check that each row, column and square contain the numbers 1 through 9.
+    # Return True or False
+    def is_valid(self):
+        for row in self.scratch:
+            if not self._has_nine(row):
+                return False
+
+        for col in range(0, 9):
+            if not self._has_nine([row[col] for row in self.scratch]):
+                return False
+
+        for box in self.boxes:
+            square = []
+            for row in box['rows']:
+                for col in box['cols']:
+                    list.append(self.scratch[row][col])
+
+            if not self._has_nine(square):
+                return False
+
+        return True
+
     # Iterate over the cells ready for processing and update the scratch array
     def solve_puzzle(self):
         last_count = self.get_scratch_count()
@@ -438,6 +468,13 @@ class Sudoku:
             print "count: %s" % current_count
             if last_count == current_count:
                 print "Not solved"
-                break
+                return False
             else:
                 last_count = current_count
+
+        if self.get_scratch_count() == 81 and self.is_valid():
+            print "Puzzle solved."
+            return True
+        else:
+            print "Puzzle not solved, or solved puzzle has an error."
+            return False
