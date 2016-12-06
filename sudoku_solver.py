@@ -1,5 +1,28 @@
 #!/usr/bin/python
+import sys
+import json
 from Sudoku import Sudoku
+
+# Default dir and puzzle
+puzzle_dir = "samples/"
+puzzle_name = "34"
+
+# If puzzle number passed in, get the puzzle number to solve
+if len(sys.argv) == 2:
+    puzzle_name = sys.argv[1]
+
+puzzle_json_file = puzzle_dir + puzzle_name + '.json'
+print puzzle_json_file
+
+puzzle = []
+try:
+    # Open the input file and read the json data.
+    with open(puzzle_json_file) as json_data:
+        puzzle = json.load(json_data)
+
+except ValueError, msg:
+    print "Invalid JSON: %s" % msg
+
 
 ''' First let's create a sudoku puzzle to solve:
 
@@ -18,9 +41,8 @@ from Sudoku import Sudoku
  -------------
 
  This will initially be represented as a 2D array, with 0 for spaces.
-'''
 
-puzzle19 = ((0,7,3, 9,5,0, 0,0,8),
+ puzzle =((0,7,3, 9,5,0, 0,0,8),
           (0,0,0, 0,1,0, 0,0,0),
           (0,6,0, 8,0,0, 0,7,0),
           (0,0,0, 0,8,0, 0,0,3),
@@ -29,28 +51,8 @@ puzzle19 = ((0,7,3, 9,5,0, 0,0,8),
           (0,4,0, 0,0,6, 0,8,0),
           (0,0,0, 0,4,0, 0,0,0),
           (6,0,0, 0,9,1, 2,5,0))
-
-puzzle33 = ((0,0,7, 4,0,1, 6,0,0),
-            (0,0,0, 0,0,0, 0,0,0),
-            (8,0,0, 6,0,5, 0,0,9),
-            (0,6,0, 5,0,8, 0,7,0),
-            (5,3,0, 0,0,0, 0,9,6),
-            (0,4,0, 1,0,9, 0,3,0),
-            (2,0,0, 9,0,3, 0,0,8),
-            (0,0,0, 0,0,0, 0,0,0),
-            (0,0,5, 8,0,4, 9,0,0))
-
-puzzle34 = ((1,0,3, 0,7,5, 0,2,0),
-            (8,0,0, 0,0,0, 0,1,0),
-            (0,0,2, 0,6,0, 0,0,0),
-            (0,6,0, 0,0,9, 3,0,0),
-            (0,0,4, 0,0,0, 8,0,0),
-            (0,0,9, 5,0,0, 0,4,0),
-            (0,0,0, 0,3,0, 5,0,0),
-            (0,2,0, 0,0,0, 0,0,4),
-            (0,3,0, 4,2,0, 1,0,8))
-
-sudoku = Sudoku(puzzle34)
+'''
+sudoku = Sudoku(puzzle)
 
 print sudoku.get_scratch_count()
 
