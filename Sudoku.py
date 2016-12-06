@@ -414,7 +414,6 @@ class Sudoku:
     #
     @staticmethod
     def _has_nine(cells):
-        print cells
         if len(cells) != 9:
             print "length is %s" % len(cells)
             return False
@@ -442,7 +441,7 @@ class Sudoku:
             square = []
             for row in box['rows']:
                 for col in box['cols']:
-                    list.append(self.scratch[row][col])
+                    square.append(self.scratch[row][col])
 
             if not self._has_nine(square):
                 return False
