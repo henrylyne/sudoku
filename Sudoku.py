@@ -418,8 +418,13 @@ class Sudoku:
             print "length is %s" % len(cells)
             return False
 
+        # Convert the array of single item dictionaries into a simple dictionary of number: True
+        simple_dict = {}
+        for cell in cells:
+            simple_dict[cell.keys()[0]] = True
+
         for num in range(1, 10):
-            if num in cells:
+            if not simple_dict[num]:
                 print "num %s not in " % num
                 print cells
                 return False
