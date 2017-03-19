@@ -1,7 +1,7 @@
 import sys, traceback
 
-class Sudoku:
 
+class Sudoku:
     # A box for each 3x3 square in the puzzle
     boxes = ({'rows': [0, 1, 2], 'cols': [0, 1, 2]},
              {'rows': [0, 1, 2], 'cols': [3, 4, 5]},
@@ -13,17 +13,17 @@ class Sudoku:
              {'rows': [6, 7, 8], 'cols': [3, 4, 5]},
              {'rows': [6, 7, 8], 'cols': [6, 7, 8]},)
 
-    # A list of cells that can be used to solve the puzzle
-    # [ [row, col], ... ]
-    cells_to_process = []
+    # Numbers 1 through 9
+    possible = {}
+    for num in range(1, 10):
+        possible[num] = True
 
     def __init__(self, puzzle):
         self.puzzle = puzzle
 
-        # Numbers 1 through 9
-        self.possible = {}
-        for num in range(1, 10):
-            self.possible[num] = True
+        # A list of cells that can be used to solve the puzzle
+        # [ [row, col], ... ]
+        self.cells_to_process = []
 
         self._init_scratch()
 
@@ -140,11 +140,11 @@ class Sudoku:
     def _find_unique_numbers(row):
         num_count = {}
         for item in row:
-                for key in item.keys():
-                    if key in num_count:
-                        num_count[key] += 1
-                    else:
-                        num_count[key] = 1
+            for key in item.keys():
+                if key in num_count:
+                    num_count[key] += 1
+                else:
+                    num_count[key] = 1
 
         numbers = []
         for num in num_count:
@@ -157,11 +157,11 @@ class Sudoku:
     def _find_non_unique_numbers(row):
         num_count = {}
         for item in row:
-                for key in item.keys():
-                    if key in num_count:
-                        num_count[key] += 1
-                    else:
-                        num_count[key] = 1
+            for key in item.keys():
+                if key in num_count:
+                    num_count[key] += 1
+                else:
+                    num_count[key] = 1
 
         numbers = []
         for num in num_count:
@@ -304,22 +304,18 @@ class Sudoku:
         for col in cols_found:
             for row in box['rows']:
                 if len(self.scratch[row][col]) > 1 and number in self.scratch[row][col]:
+                    print "Removing %s from position %s,%s" % (number, row, col)
                     del self.scratch[row][col][number]
                     self._check_cell(row, col)
 
-    #
-    def _remove_other_numbers_from_pair_cells(self, cells, numbers_to_remain):
-        for cell in cells:
-            row = int(cell[0])
-            col = int(cell[1])
-
-            numbers_to_remove = []
-            for number in self.scratch[row][col]:
-                if number not in numbers_to_remain:
-                    numbers_to_remove.append(number)
-
-            for number in numbers_to_remove:
-                del self.scratch[row][col][number]
+    # Remove number from specific rows inside a box
+    def _remove_from_row_inside_box(self, rows_found, box, number):
+        for row in rows_found:
+            for col in box['cols']:
+                if len(self.scratch[row][col]) > 1 and number in self.scratch[row][col]:
+                    print "Removing %s from position %s,%s" % (number, row, col)
+                    del self.scratch[row][col][number]
+                    self._check_cell(row, col)
 
     #
     # Find box pairs
@@ -343,9 +339,8 @@ class Sudoku:
                 for row_idx in box['rows']:
                     for col_idx in box['cols']:
                         if num in self.scratch[row_idx][col_idx]:
-                            cells_for_number[num].append(str(row_idx)+str(col_idx))
+                            cells_for_number[num].append(str(row_idx) + str(col_idx))
 
-            numbers_for_cell = {}
             for number in cells_for_number:
                 if len(cells_for_number[number]) == 2:
                     if number not in box_numbers[box_idx]:
@@ -361,42 +356,112 @@ class Sudoku:
                     if cell_2[1] not in box_numbers[box_idx][number]['cols']:
                         box_numbers[box_idx][number]['cols'].append(int(cell_2[1]))
 
-                    pair_key = cell_1 + cell_2
-                    if pair_key in numbers_for_cell:
-                        numbers_for_cell[pair_key].append(number)
-                    else:
-                        numbers_for_cell[pair_key] = [number]
-
-            # Find naked pairs for a box
-            for cells in numbers_for_cell:
-                if len(numbers_for_cell[cells]) == 2:
-                    cell_array = [[cells[0], cells[1]], [cells[2], cells[3]]]
-                    self._remove_other_numbers_from_pair_cells(cell_array, numbers_for_cell[cells])
-
         # Find matching column pairs across each column of squares
         for column in [0, 1, 2]:
             square_a = column
             square_b = square_a + 3
             square_c = square_b + 3
             for number in box_numbers[square_a]:
-                if number in box_numbers[square_b] and cmp(box_numbers[square_a][number]['cols'], box_numbers[square_b][number]['cols']) == 0:
+                if number in box_numbers[square_b] and cmp(box_numbers[square_a][number]['cols'],
+                                                           box_numbers[square_b][number]['cols']) == 0:
                     # remove number from columns in square_c
-                    #pass
-                    self._remove_from_col_inside_box(box_numbers[square_a][number]['cols'], self.boxes[square_c], number)
-                elif number in box_numbers[square_c] and cmp(box_numbers[square_a][number]['cols'], box_numbers[square_c][number]['cols']) == 0:
+                    self._remove_from_col_inside_box(box_numbers[square_a][number]['cols'], self.boxes[square_c],
+                                                     number)
+                elif number in box_numbers[square_c] and cmp(box_numbers[square_a][number]['cols'],
+                                                             box_numbers[square_c][number]['cols']) == 0:
                     # remove number from columns in square_b
-                    pass
-                    #self._remove_from_col_inside_box(box_numbers[square_a][number]['cols'], self.boxes[square_b], number)
+                    self._remove_from_col_inside_box(box_numbers[square_a][number]['cols'], self.boxes[square_b],
+                                                     number)
 
             for number in box_numbers[square_b]:
-                if number in box_numbers[square_c] and cmp(box_numbers[square_b][number]['cols'], box_numbers[square_c][number]['cols']) == 0:
+                if number in box_numbers[square_c] and cmp(box_numbers[square_b][number]['cols'],
+                                                           box_numbers[square_c][number]['cols']) == 0:
                     # remove number from columns in square_a
-                    #pass
-                    self._remove_from_col_inside_box(box_numbers[square_b][number]['cols'], self.boxes[square_a], number)
+                    self._remove_from_col_inside_box(box_numbers[square_b][number]['cols'], self.boxes[square_a],
+                                                     number)
+
+        # Find matching row pairs across each row of squares
+        for row in [0, 3, 6]:
+            square_a = row
+            square_b = square_a + 1
+            square_c = square_b + 1
+            for number in box_numbers[square_a]:
+                if number in box_numbers[square_b] and cmp(box_numbers[square_a][number]['rows'],
+                                                           box_numbers[square_b][number]['rows']) == 0:
+                    # remove number from rows in square_c
+                    self._remove_from_row_inside_box(box_numbers[square_a][number]['rows'], self.boxes[square_c],
+                                                     number)
+                elif number in box_numbers[square_c] and cmp(box_numbers[square_a][number]['rows'],
+                                                             box_numbers[square_c][number]['rows']) == 0:
+                    # remove number from rows in square_b
+                    self._remove_from_row_inside_box(box_numbers[square_a][number]['rows'], self.boxes[square_b],
+                                                     number)
+
+            for number in box_numbers[square_b]:
+                if number in box_numbers[square_c] and cmp(box_numbers[square_b][number]['rows'],
+                                                           box_numbers[square_c][number]['rows']) == 0:
+                    # remove number from rows in square_a
+                    self._remove_from_row_inside_box(box_numbers[square_b][number]['rows'], self.boxes[square_a],
+                                                     number)
+
+    @staticmethod
+    def _get_matching_naked_pairs(cell, remaining_cells):
+        cell_number_set = set(cell.keys())
+        for index, next_cell in enumerate(remaining_cells):
+            next_cell_set = set(next_cell.keys())
+            if cell_number_set == next_cell_set:
+                return index
 
     #
-    def _find_pairs(self):
+    @staticmethod
+    def _remove_naked_pair_from_list(row, pair_index):
+        removable_numbers = row[pair_index[0]].keys()
+
+        has_list_changed = False
+        for number in removable_numbers:
+            for index, cell in enumerate(row):
+                if index not in pair_index and len(cell) > 1:
+                    if number in cell:
+                        print "Removing %s from position %s" % (number, index)
+                        del cell[number]
+                        has_list_changed = True
+
+        if has_list_changed:
+            return row
+
+    #
+    def _find_naked_pairs(self, row):
+        for index, cell in enumerate(row):
+            next_index = index + 1
+            if len(cell) == 2 and next_index < len(row):
+                match_index = self._get_matching_naked_pairs(cell, row[next_index:len(row)])
+                if match_index:
+                    match_index += next_index
+                    print row
+                    print "Matching pairs at index %s, %s" % (index, match_index)
+                    self._remove_naked_pair_from_list(row, [index, match_index])
+
+    #
+    def _handle_naked_pairs(self):
         self._find_box_pairs()
+
+        # Check rows
+        for index, row in enumerate(self.scratch):
+            self._find_naked_pairs(row)
+
+        # Check columns
+        for col in range(0, 9):
+            self._find_naked_pairs([row[col] for row in self.scratch])
+
+        # Check the boxes
+        for index, box in enumerate(self.boxes):
+            square = []
+            for row in box['rows']:
+                for col in box['cols']:
+                    square.append(self.scratch[row][col])
+
+            # Find naked pairs and remove the numbers from the rest of the square
+            self._find_naked_pairs(square)
 
     #
     def _process_cell(self, cell):
@@ -466,7 +531,7 @@ class Sudoku:
                 self._update_scratch_unique_boxes()
                 self._update_scratch_box_rows()
                 self._update_scratch_box_cols()
-                self._find_pairs()
+                self._handle_naked_pairs()
 
             current_count = self.get_scratch_count()
             print "count: %s" % current_count

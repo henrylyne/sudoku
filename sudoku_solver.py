@@ -1,46 +1,44 @@
 #!/usr/bin/python
 import sys
 import json
+import os
 from Sudoku import Sudoku
 
 # Default dir and puzzle
 puzzle_dir = "samples/"
-puzzle_name = "34"
+puzzle_name = "34.json"
 
 # If puzzle number passed in, get the puzzle number to solve
 if len(sys.argv) == 2:
     puzzle_name = sys.argv[1]
 
-puzzle_json_file = puzzle_dir + puzzle_name + '.json'
-print puzzle_json_file
+puzzle_file = puzzle_dir + puzzle_name
+print puzzle_file
+
+filename, file_extension = os.path.splitext(puzzle_file)
+print file_extension
 
 puzzle = []
 try:
     # Open the input file and read the json data.
-    with open(puzzle_json_file) as json_data:
-        puzzle = json.load(json_data)
+    if file_extension.lower() == '.json':
+        with open(puzzle_file) as json_data:
+            puzzle = json.load(json_data)
+    else:
+        fh = open(puzzle_file, 'r')
+        for line in fh:
+            row = []
+            for index in range(0, 81):
+                row.append(int(line[index]))
+                index += 1
+                if len(row) == 9:
+                    puzzle.append(row)
+                    row = []
 
 except ValueError, msg:
     print "Invalid JSON: %s" % msg
 
-
-''' First let's create a sudoku puzzle to solve:
-
- -------------
- |*73|95*|**8|
- |***|*1*|***|
- |*6*|8**|*7*|
- -------------
- |***|*8*|**3|
- |3**|4*5|**9|
- |9**|*3*|***|
- -------------
- |*4*|**6|*8*|
- |***|*4*|***|
- |6**|*91|25*|
- -------------
-
- This will initially be represented as a 2D array, with 0 for spaces.
+''' The puzzle will be represented as a 2D array, with 0 for spaces.
 
  puzzle =((0,7,3, 9,5,0, 0,0,8),
           (0,0,0, 0,1,0, 0,0,0),
