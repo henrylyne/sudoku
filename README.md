@@ -1,2 +1,2 @@
 # sudoku
-A sudoku puzzle solver
+An unfinished sudoku puzzle solver
